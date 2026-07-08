@@ -5,52 +5,31 @@
 	"roomHostingPort": 7911,
 	"repos": [
 		{
-			"name": "scripts",
-			"remote": "https://github.com/ProjectIgnis/CardScripts",
-			"path": "./sync/scripts/",
+			"name": "optcg-data",
+			"remote": "E:/github/optcg-server-data",
+			"path": "./sync/optcg-data/",
 			"webhookPort": 34343,
-			"webhookToken": "<change_this>"
-		},
-		{
-			"name": "databases",
-			"remote": "https://github.com/ProjectIgnis/BabelCDB",
-			"path": "./sync/databases/",
-			"webhookPort": 62672,
-			"webhookToken": "<change_this>"
-		},
-		{
-			"name": "banlists",
-			"remote": "https://github.com/ProjectIgnis/LFLists",
-			"path": "./sync/banlists/",
-			"webhookPort": 49382,
-			"webhookToken": "<change_this>"
-		},
-		{
-			"name": "bin",
-			"remote": "https://github.com/ProjectIgnis/bin",
-			"path": "./sync/bin/",
-			"webhookPort": 43632,
 			"webhookToken": "<change_this>"
 		}
 	],
 	"banlistProvider": {
 		"observedRepos": [
-			"banlists"
+			"optcg-data"
 		],
 		"fileRegex": ".*\\.lflist\\.conf"
 	},
 	"coreProvider": {
 		"observedRepos": [
-			"bin"
+			"optcg-data"
 		],
-		"fileRegex": ".*libocgcore\\.so",
+		"fileRegex": ".*ocgcore\\.dll",
 		"tmpPath": "./tmp/",
 		"coreType": "hornet",
 		"loadPerRoom": true
 	},
 	"dataProvider": {
 		"observedRepos": [
-			"databases"
+			"optcg-data"
 		],
 		"fileRegex": ".*\\.cdb"
 	},
@@ -126,7 +105,7 @@
 	},
 	"scriptProvider": {
 		"observedRepos": [
-			"scripts"
+			"optcg-data"
 		],
 		"fileRegex": ".*\\.lua"
 	}

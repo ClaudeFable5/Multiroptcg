@@ -236,6 +236,13 @@ private:
 			// Add flag that client should be setting.
 			// NOLINTNEXTLINE: DUEL_PSEUDO_SHUFFLE
 			hi.duelFlagsLow |= (!hi.dontShuffleDeck) ? 0x0 : 0x10;
+			// [OPCG] dedicated ONE PIECE CARD GAME server: every room runs the
+			// OPCG ruleset. The flags land in the HostInfo itself, so joiners,
+			// spectators, reconnects and replays all inherit them.
+			// NOLINTNEXTLINE: DUEL_OPCG_MODE (bit 37) lives in the high dword.
+			hi.duelFlagsHigh |= 0x20U;
+			// NOLINTNEXTLINE: DUEL_NO_MAIN_PHASE_2
+			hi.duelFlagsLow |= 0x200000U;
 			// Let the lobby make the room so we can list it later.
 			auto room = roomHosting.lobby.MakeRoom(info);
 			// Add the client to the newly created room.

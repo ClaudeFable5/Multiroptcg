@@ -345,7 +345,12 @@ Msg StripMessageForTeam(uint8_t team, Msg msg) noexcept
 		ptr += 4U; // Card code
 		ptr += LocInfo::SIZE; // Previous location
 		const auto current = Read<LocInfo>(ptr);
-		if(current.con == team || IsLocInfoPublic(current))
+		// [OPCG] a face-down life card (LOCATION_EXTRA) is hidden from BOTH
+		// players: not even its owner may look at it, so moves inside the
+		// life stack never leak card codes to anyone.
+		const bool hiddenLife = ((current.loc & LOCATION_EXTRA) != 0U) &&
+		                        ((current.pos & POS_FACEDOWN) != 0U);
+		if(!hiddenLife && (current.con == team || IsLocInfoPublic(current)))
 			break;
 		ptr -= 4U + (LocInfo::SIZE * 2U);
 		Write<uint32_t>(ptr, 0U);

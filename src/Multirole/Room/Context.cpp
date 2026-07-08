@@ -395,20 +395,33 @@ std::unique_ptr<YGOPro::STOCMsg> Context::CheckDeck(const YGOPro::Deck& deck) co
 		       ((it == eit) && bl.IsWhitelist());
 	};
 
+	// [OPCG] ONE PIECE cards allow up to 4 copies of the same card number and
+	// live outside the OCG/TCG scope taxonomy. The range check follows the
+	// alias-resolved code, so alternate printings share the base card's count.
+	auto IsOpcgCode = [&aliases](uint32_t code) -> bool
+	{
+		if(auto search = aliases.find(code); search != aliases.end())
+			code = search->second;
+		return code >= 879999990U && code <= 880099999U;
+	};
 	for(const auto code : codes)
 	{
 		const uint32_t totalCount = GetTotalCount(code);
-		if(totalCount > 3U)
+		const bool opcg = IsOpcgCode(code);
+		if(totalCount > (opcg ? 4U : 3U))
 			return MakeErrorPtr(CARD_MORE_THAN_3, code);
-		const auto& ced = cdb->ExtraFromCode(code);
-		if(CheckUnofficial(ced.scope, hostInfo.allowed))
-			return MakeErrorPtr(CARD_UNOFFICIAL, code);
-		if(CheckPrelease(ced.scope, hostInfo.allowed))
-			return MakeErrorPtr(CARD_UNOFFICIAL, code);
-		if(CheckOCG(ced.scope, hostInfo.allowed))
-			return MakeErrorPtr(CARD_TCG_ONLY, code);
-		if(CheckTCG(ced.scope, hostInfo.allowed))
-			return MakeErrorPtr(CARD_OCG_ONLY, code);
+		if(!opcg)
+		{
+			const auto& ced = cdb->ExtraFromCode(code);
+			if(CheckUnofficial(ced.scope, hostInfo.allowed))
+				return MakeErrorPtr(CARD_UNOFFICIAL, code);
+			if(CheckPrelease(ced.scope, hostInfo.allowed))
+				return MakeErrorPtr(CARD_UNOFFICIAL, code);
+			if(CheckOCG(ced.scope, hostInfo.allowed))
+				return MakeErrorPtr(CARD_TCG_ONLY, code);
+			if(CheckTCG(ced.scope, hostInfo.allowed))
+				return MakeErrorPtr(CARD_OCG_ONLY, code);
+		}
 		if((banlist != nullptr) && CheckBanlist(code, totalCount, *banlist))
 			return MakeErrorPtr(CARD_BANLISTED, code);
 	}
