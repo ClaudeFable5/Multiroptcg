@@ -241,11 +241,13 @@ MsgDistType GetMessageDistributionType(const Msg& msg) noexcept
 	{
 		const auto* ptr = msg.data() + 2U;
 		// if count(uint32_t) is not 0 and location(uint8_t) is LOCATION_DECK
-		// then send to specific team duelist.
+		// or LOCATION_EXTRA (the OPCG life stack — private looks, mirrors the
+		// EDOPro client host's routing) then send to specific team duelist.
 		if(Read<uint32_t>(ptr) != 0U)
 		{
 			ptr += 4U + 1U;
-			if(Read<uint8_t>(ptr) == LOCATION_DECK)
+			const auto location = Read<uint8_t>(ptr);
+			if(location == LOCATION_DECK || location == LOCATION_EXTRA)
 				return MsgDistType::MSG_DIST_TYPE_SPECIFIC_TEAM_DUELIST;
 		}
 		return MsgDistType::MSG_DIST_TYPE_EVERYONE;
