@@ -6,10 +6,10 @@
 	"repos": [
 		{
 			"name": "optcg-data",
-			"remote": "E:/github/optcg-server-data",
+			"remote": "E:/Multiroptcg-data",
 			"path": "./sync/optcg-data/",
 			"webhookPort": 34343,
-			"webhookToken": "<change_this>"
+			"webhookToken": "optcg-drop-apply"
 		}
 	],
 	"banlistProvider": {

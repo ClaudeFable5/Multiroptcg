@@ -4,7 +4,7 @@
 # canon change, then restart multirole (or hit the webhook) to pick it up.
 param(
     [string]$Canon = 'F:\edopcg_CODEX_INTEGRATED_20260701_FINAL_EDIT_BY_CLAUDE_FABLE\bin\release',
-    [string]$DataRepo = 'E:\github\optcg-server-data'
+    [string]$DataRepo = 'E:\Multiroptcg-data'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -37,6 +37,13 @@ try {
     if ($pending) {
         git commit -m "pack optcg data $(Get-Date -Format 'yyyy-MM-dd HH:mm')" | Out-Null
         Write-Host "committed: $((git rev-parse --short HEAD))"
+        # hot-reload a running server (no-op if it is offline; next boot applies)
+        try {
+            Invoke-WebRequest -Uri 'http://127.0.0.1:34343/' -Method Post -Body 'optcg-drop-apply' -TimeoutSec 3 -UseBasicParsing | Out-Null
+            Write-Host 'server hot-reloaded'
+        } catch {
+            Write-Host 'server offline - picked up on next start'
+        }
     } else {
         Write-Host 'no changes to commit'
     }

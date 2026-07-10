@@ -22,12 +22,17 @@ EVERYONE이라 그대로 방송, 밴리스트 없는 룸(hash 0)은 네이티브
 constant.lua→utility.lua→opcg_bootstrap 체인이 Dueling.cpp:111의 표준 프리로드로
 자동 탑승, 뒷면 라이프 MOVE는 상대에겐 upstream 스트리핑이 원래 가림.
 
-## 데이터 레포
+## 데이터 폴더 (구 E:\github\optcg-server-data는 은퇴)
 
-`util/pack-optcg-data.ps1` 실행 → `E:\github\optcg-server-data`에 원전의
-script(베이스+확장 lua 전부) + cards-opcg.cdb + ocgcore.dll(Win32)을 모아
-git 커밋. **원전(스크립트/cdb/코어)이 바뀔 때마다 재실행** 후 서버 재시작
-(또는 웹훅 포트로 pull 트리거).
+서버 데이터 정본 = **`E:\Multiroptcg-data\`** (로컬 git — GitHub 무관).
+파일(script\*.lua, cards-opcg.cdb, ocgcore.dll, *.lflist.conf)을 넣고
+**`적용하기.bat`** 더블클릭: 서버가 켜져 있으면 웹훅(127.0.0.1:34343,
+토큰 `optcg-drop-apply`)으로 즉시 핫리로드, 꺼져 있으면 다음 기동 때
+자동 반영(기동 시 Fetch+Reset). Multirole 구조상 공급원은 git 레포여야
+하므로 .git은 필수지만 사용자가 만질 일은 없음.
+
+원전 빌드 전체 반영은 `util/pack-optcg-data.ps1`(원전 bin\release →
+E:\Multiroptcg-data 복사+커밋; 이후 적용하기.bat 또는 서버 재시작).
 
 ## 빌드 (MSVC x86 — 이 머신 재현 레시피)
 
