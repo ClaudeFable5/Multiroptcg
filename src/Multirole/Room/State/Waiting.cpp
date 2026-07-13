@@ -228,12 +228,18 @@ StateOpt Context::operator()(State::Waiting& s, const Event::TryStart& e) noexce
 		return std::nullopt;
 	isStarted = true;
 	SendToAll(MakeDuelStart());
-	// NOTE(OPCG): the pregame RPS/turn prompts stay server-side stock. Under
-	// DUEL_OPCG_SCRIPTED_RPS the CLIENTS auto-answer both prompts instantly
-	// (duelclient STOC_SELECT_HAND/STOC_SELECT_TP fast-forwards) and the
-	// in-duel scripted RPS decides the real first player. A server-side
-	// state skip (2026-07-12) was reverted 07-13: untested shortcut, not
-	// the original design.
+	if((hostInfo.duelFlagsHigh & 0x40U) != 0U) // DUEL_OPCG_SCRIPTED_RPS >> 32
+	{
+		// [OPCG, user-ordered 2026-07-13 "멀티롤에서 감맘보 빼세요"] no
+		// pregame finger game or turn prompt AT ALL, server-side: the
+		// in-duel scripted RPS (Duel.RockPaperScissors + SetTurnPlayer)
+		// decides the real first player, so both pregame states are
+		// meaningless round-trips and their client-side result animation
+		// would flash a phantom RPS. Crash-cleared: the 07-13 duel-start
+		// crash was the IPC segment size, not this shortcut.
+		isTeam1GoingFirst = 0U;
+		return MakeDuelingState();
+	}
 	return State::RockPaperScissor{};
 }
 

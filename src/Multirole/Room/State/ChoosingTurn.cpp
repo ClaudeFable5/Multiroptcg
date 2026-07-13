@@ -19,6 +19,14 @@ StateOpt Context::operator()(State::ChoosingTurn& s, const Event::ChooseTurn& e)
 	isTeam1GoingFirst = static_cast<uint8_t>(
 		(e.client.Position().first == 0U && !e.goingFirst) ||
 		(e.client.Position().first == 1U && e.goingFirst));
+	return MakeDuelingState();
+}
+
+// Builds the Dueling state from the already-set isTeam1GoingFirst. Shared by
+// the regular turn-choice path above and the OPCG scripted-RPS shortcut in
+// Waiting (user-ordered: the pregame finger game is skipped server-side).
+StateVariant Context::MakeDuelingState() noexcept
+{
 	auto DecidePlayerOrder = [&]() -> decltype(State::Dueling::currentPos)
 	{
 		if((hostInfo.duelFlagsLow & DUEL_RELAY) == 0U)

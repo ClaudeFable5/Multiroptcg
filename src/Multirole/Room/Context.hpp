@@ -204,6 +204,9 @@ private:
 		YGOPro::STOCMsg&& msg) noexcept;
 	// State/RockPaperScissor.cpp
 	void SendRPS() noexcept;
+	// State/ChoosingTurn.cpp — also entered directly from Waiting in OPCG
+	// scripted-RPS rooms (user-ordered: no pregame RPS server-side)
+	StateVariant MakeDuelingState() noexcept;
 	// State/Waiting.cpp
 	bool TryEmplaceDuelist(Client& client, Client::PosType hint = {}) noexcept;
 };
