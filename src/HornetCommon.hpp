@@ -48,7 +48,13 @@ struct SharedSegment
 	ipc::interprocess_mutex mtx;
 	ipc::interprocess_condition cv;
 	Action act{Action::NO_WORK};
-	std::array<uint8_t, std::numeric_limits<uint16_t>::max()*2U> bytes{};
+	// [OPCG] 4MiB, up from u16max*2 (128KiB): CB_SCRIPT_READER copies whole
+	// script files through here and opcg_card_meta.lua alone is ~340KiB —
+	// the old capacity made the multirole-side memcpy write past the mapping
+	// and kill the server on the FIRST duel creation of every OPCG room
+	// (2026-07-13 crash dump: write AV at segment end, deterministic).
+	// Multirole and hornet share this layout: rebuild BOTH in lockstep.
+	std::array<uint8_t, 0x400000U> bytes{};
 };
 
 } // namespace Ignis::Hornet

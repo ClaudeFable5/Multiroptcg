@@ -228,6 +228,12 @@ StateOpt Context::operator()(State::Waiting& s, const Event::TryStart& e) noexce
 		return std::nullopt;
 	isStarted = true;
 	SendToAll(MakeDuelStart());
+	// NOTE(OPCG): the pregame RPS/turn prompts stay server-side stock. Under
+	// DUEL_OPCG_SCRIPTED_RPS the CLIENTS auto-answer both prompts instantly
+	// (duelclient STOC_SELECT_HAND/STOC_SELECT_TP fast-forwards) and the
+	// in-duel scripted RPS decides the real first player. A server-side
+	// state skip (2026-07-12) was reverted 07-13: untested shortcut, not
+	// the original design.
 	return State::RockPaperScissor{};
 }
 

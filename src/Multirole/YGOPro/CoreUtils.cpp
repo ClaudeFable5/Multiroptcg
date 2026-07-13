@@ -602,6 +602,15 @@ std::vector<QueryRequest> GetPostDistQueryRequests(const Msg& msg) noexcept
 		break;
 	}
 	}
+	// [OPCG] 파워 가시성 서비스(유저 설계, gframe Process() 미러): 매 메시지
+	// 후 양측 필드 ATK 스냅샷. 원본 자리 그대로 — 스톡 리프레시 '뒤'에, 응답
+	// 대기 메시지(원본의 stop 분기)에서는 생략. QUERY_POSITION 동봉은 스트립
+	// 버퍼 반쪽 배달 방지 가설(검증 계류) — 판정 나면 이 비트만 걷어낸다.
+	if(!DoesMessageRequireAnswer(GetMessageType(msg)))
+	{
+		qreqs.emplace_back(QueryLocationRequest{0U, LOCATION_MZONE, QUERY_POSITION | QUERY_ATTACK});
+		qreqs.emplace_back(QueryLocationRequest{1U, LOCATION_MZONE, QUERY_POSITION | QUERY_ATTACK});
+	}
 	return qreqs;
 }
 

@@ -367,10 +367,19 @@ void HornetWrapper::NotifyAndWait(Hornet::Action act)
 			const auto nameSz = Read<std::size_t>(rptr);
 			const std::string_view nameSv(reinterpret_cast<const char*>(rptr), nameSz);
 			const auto script = supplier->ScriptFromFilePath(nameSv);
-			const auto size = IScriptSupplier::GetSize(script);
+			auto size = IScriptSupplier::GetSize(script);
+			const char* const data = IScriptSupplier::GetData(script);
+			// [OPCG] never memcpy past the shared segment again (2026-07-13
+			// crash: opcg_card_meta.lua 340KiB vs old 128KiB segment killed
+			// the server on every duel creation). A script that still exceeds
+			// the enlarged segment is reported as missing instead of UB.
+			constexpr std::size_t maxScript =
+				sizeof(hss->bytes) - sizeof(std::size_t);
+			if(data == nullptr || size > maxScript)
+				size = 0U;
 			auto* wptr = hss->bytes.data();
 			Write<std::size_t>(wptr, size);
-			if(const char* const data = IScriptSupplier::GetData(script); data != nullptr)
+			if(size != 0U)
 				std::memcpy(wptr, data, size);
 			act = Hornet::Action::CB_DONE;
 			break;
