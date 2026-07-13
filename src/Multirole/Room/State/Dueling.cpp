@@ -545,9 +545,11 @@ std::optional<Context::DuelFinishReason> Context::Process(State::Dueling& s) noe
 		// OPCG방 MZONE 풀버퍼 브로드캐스트가 보장(뒷면 없는 존).
 		if(!dfr && !DoesMessageRequireAnswer(GetMessageType(msg)))
 		{
+			// QUERY_POSITION 동봉(유저 지시): MZONE 풀버퍼 브로드캐스트가
+			// 있어도, 어떤 배포 경로를 타든 앞면 증명이 버퍼 안에 실리게.
 			ProcessQueryRequests({
-				QueryLocationRequest{0U, LOCATION_MZONE, QUERY_ATTACK},
-				QueryLocationRequest{1U, LOCATION_MZONE, QUERY_ATTACK}
+				QueryLocationRequest{0U, LOCATION_MZONE, QUERY_POSITION | QUERY_ATTACK},
+				QueryLocationRequest{1U, LOCATION_MZONE, QUERY_POSITION | QUERY_ATTACK}
 			});
 		}
 		return dfr;
