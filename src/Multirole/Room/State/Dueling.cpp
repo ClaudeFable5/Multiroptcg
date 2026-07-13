@@ -416,6 +416,20 @@ std::optional<Context::DuelFinishReason> Context::Process(State::Dueling& s) noe
 					SendToTeam(team, MakeMsg(fullBuffer));
 					continue;
 				}
+				// [OPCG] MZONE has no face-down state by rule (leaders start
+				// revealed, rest is face-up defense), so the public strip only
+				// starves the opponent: a flag-sparse refresh (QUERY_ATTACK
+				// alone, the power-visibility service) carries no POSITION
+				// proof and would be emptied by IsPublicQuery. The game rule,
+				// not the buffer flag, is the truth here - broadcast full.
+				if((hostInfo.duelFlagsHigh & 0x20U) != 0U && req.loc == LOCATION_MZONE)
+				{
+					auto fullMsg = MakeMsg(fullBuffer);
+					SendToTeam(team, fullMsg);
+					SendToTeam(1U - team, fullMsg);
+					SendToSpectators(SaveToSpectatorCache(s, std::move(fullMsg)));
+					continue;
+				}
 				const auto query = DeserializeLocationQueryBuffer(fullBuffer);
 				const auto ownerBuffer = SerializeLocationQuery(query, false);
 				const auto strippedBuffer = SerializeLocationQuery(query, true);

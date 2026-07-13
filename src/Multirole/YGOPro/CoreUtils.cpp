@@ -608,8 +608,8 @@ std::vector<QueryRequest> GetPostDistQueryRequests(const Msg& msg) noexcept
 	// 버퍼 반쪽 배달 방지 가설(검증 계류) — 판정 나면 이 비트만 걷어낸다.
 	if(!DoesMessageRequireAnswer(GetMessageType(msg)))
 	{
-		qreqs.emplace_back(QueryLocationRequest{0U, LOCATION_MZONE, QUERY_POSITION | QUERY_ATTACK});
-		qreqs.emplace_back(QueryLocationRequest{1U, LOCATION_MZONE, QUERY_POSITION | QUERY_ATTACK});
+		qreqs.emplace_back(QueryLocationRequest{0U, LOCATION_MZONE, /*QUERY_POSITION |*/ QUERY_ATTACK});
+		qreqs.emplace_back(QueryLocationRequest{1U, LOCATION_MZONE, /*QUERY_POSITION |*/ QUERY_ATTACK});
 	}
 	return qreqs;
 }
