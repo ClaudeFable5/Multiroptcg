@@ -536,7 +536,21 @@ std::optional<Context::DuelFinishReason> Context::Process(State::Dueling& s) noe
 		ProcessQueryRequests(GetPreDistQueryRequests(msg));
 		DistributeMsg(msg);
 		ProcessQueryRequests(GetPostDistQueryRequests(msg));
-		return PostAnalyzeMsg(msg);
+		const auto dfr = PostAnalyzeMsg(msg);
+		// [OPCG] 파워 가시성 서비스 — gframe GenericDuel::Process()의
+		//   stop = Analyze(msg); if(stop) break;
+		//   RefreshMzone(0, QUERY_ATTACK); RefreshMzone(1, QUERY_ATTACK);
+		// 를 자리까지 그대로 미러: Analyze 상당(위 전부)이 끝난 뒤에 돌고,
+		// stop 상당(듀얼 종료 dfr / 응답 대기)이면 생략한다. ATK 단독 배달은
+		// OPCG방 MZONE 풀버퍼 브로드캐스트가 보장(뒷면 없는 존).
+		if(!dfr && !DoesMessageRequireAnswer(GetMessageType(msg)))
+		{
+			ProcessQueryRequests({
+				QueryLocationRequest{0U, LOCATION_MZONE, QUERY_ATTACK},
+				QueryLocationRequest{1U, LOCATION_MZONE, QUERY_ATTACK}
+			});
+		}
+		return dfr;
 	};
 	try
 	{
