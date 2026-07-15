@@ -58,13 +58,16 @@ GitRepo::GitRepo(Service::LogHandler& lh, boost::asio::io_context& ioCtx, const 
 	{
 		Fetch();
 		ResetToFetchHead();
+		LOG_INFO(I18N::GIT_REPO_UPDATE_COMPLETED);
 	}
-	catch(...)
+	catch(const std::exception& e)
 	{
-		git_repository_free(repo);
-		throw;
+		// [OPCG] a boot-time fetch failure (offline, SSL, firewall) must not
+		// kill the server when a checkout already exists - serve the bundled/
+		// last-pulled data and let the next boot or webhook retry the update.
+		// (A missing repo still clones or dies above, as before.)
+		LOG_ERROR(I18N::GIT_REPO_UPDATE_EXCEPT, e.what());
 	}
-	LOG_INFO(I18N::GIT_REPO_UPDATE_COMPLETED);
 }
 
 GitRepo::~GitRepo()
