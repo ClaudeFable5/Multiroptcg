@@ -195,9 +195,21 @@ Add-Type -TypeDefinition $source -Language CSharp
 # fresh server instance with logs
 Get-Process -Name multirole, hornet -ErrorAction SilentlyContinue | Stop-Process -Force -Confirm:$false -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 300
+# repo clone/pull at boot goes over https - give the server the same CA
+# bundle the friend package ships, or the first boot dies on SSL.
+$cacert = Join-Path $ServerDir "cacert.pem"
+if (Test-Path $cacert) { $env:SSL_CERT_FILE = $cacert }
 $proc = Start-Process (Join-Path $ServerDir "multirole.exe") -WorkingDirectory $ServerDir -PassThru -WindowStyle Hidden -RedirectStandardOutput (Join-Path $ServerDir "smoke_out.log") -RedirectStandardError (Join-Path $ServerDir "smoke_err.log")
 Start-Sleep -Seconds 3
 if ($proc.HasExited) { Write-Host "SERVER DIED AT BOOT (exit=$($proc.ExitCode))"; Get-Content (Join-Path $ServerDir "smoke_out.log") -Tail 5; exit 2 }
+# clone/pull can outlast the 3s boot nap - wait until 7911 actually listens.
+$deadline = (Get-Date).AddSeconds(40)
+while ((Get-Date) -lt $deadline) {
+    if ($proc.HasExited) { Write-Host "SERVER DIED DURING BOOT (exit=$($proc.ExitCode))"; Get-Content (Join-Path $ServerDir "smoke_out.log") -Tail 5; exit 2 }
+    $listening = Get-NetTCPConnection -LocalPort 7911 -State Listen -ErrorAction SilentlyContinue
+    if ($listening) { break }
+    Start-Sleep -Milliseconds 500
+}
 
 $code = [DuelStartSmoke]::Run()
 

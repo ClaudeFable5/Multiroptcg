@@ -321,15 +321,19 @@ std::optional<Context::DuelFinishReason> Context::Process(State::Dueling& s) noe
 		uint8_t msgType = GetMessageType(msg);
 		if(msgType == MSG_RETRY)
 		{
-			if(s.retryCount[s.replier->Position().first]++ < 1)
-			{
-				s.replier->Send(MakeChat(CHAT_MSG_TYPE_ERROR, I18N::CLIENT_ROOM_MSG_RETRY_ERROR));
-				if(!s.lastHint.empty())
-					s.replier->Send(MakeGameMsg(s.lastHint));
-				s.replier->Send(MakeGameMsg(s.lastRequest));
-				s.replay->PopBackResponse();
-				return false;
-			}
+			// [OPCG] a rejected response is NEVER fatal: no matter how many
+			// times, warn + resend the pending request and scrub the bad
+			// response from the replay. Distributing MSG_RETRY desyncs the
+			// client and kills the duel (the old ++count<1 gate let the 2nd
+			// rejection per player through). Root cause of the client-side
+			// request/response drift is tracked separately.
+			++s.retryCount[s.replier->Position().first];
+			s.replier->Send(MakeChat(CHAT_MSG_TYPE_ERROR, I18N::CLIENT_ROOM_MSG_RETRY_ERROR));
+			if(!s.lastHint.empty())
+				s.replier->Send(MakeGameMsg(s.lastHint));
+			s.replier->Send(MakeGameMsg(s.lastRequest));
+			s.replay->PopBackResponse();
+			return false;
 		}
 		else if(msgType == MSG_HINT && msg[1U] == 3U) // NOLINT: HINT_SELECTMSG
 		{
