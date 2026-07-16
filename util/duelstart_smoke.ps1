@@ -211,7 +211,17 @@ while ((Get-Date) -lt $deadline) {
     Start-Sleep -Milliseconds 500
 }
 
-$code = [DuelStartSmoke]::Run()
+# 7911 starts listening BEFORE the repo clone/fetch + provider load finish,
+# so a join fired at first-listen can go unanswered (observed on first boot
+# and on slow fetches). Retry with breathing room instead of failing once.
+$code = 1
+for ($try = 1; $try -le 6; $try++) {
+    $code = [DuelStartSmoke]::Run()
+    if ($code -eq 0) { break }
+    if ($proc.HasExited) { Write-Host "server exited between attempts"; break }
+    Write-Host "attempt $try failed - server may still be loading; retrying in 10s..."
+    Start-Sleep -Seconds 10
+}
 
 Start-Sleep -Milliseconds 500
 $alive = -not $proc.HasExited

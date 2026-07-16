@@ -53,6 +53,32 @@ GitRepo::GitRepo(Service::LogHandler& lh, boost::asio::io_context& ioCtx, const 
 	}
 	LOG_INFO(I18N::GIT_REPO_EXISTS);
 	Git::Check(git_repository_open(&repo, path.string().data()));
+	// [OPCG] a first clone killed mid-flight (window closed on first boot)
+	// leaves a repo shell with an unborn HEAD and no checkout - the server
+	// would come up alive but with an empty card database. Detect the shell,
+	// burn it down and redo the clone from scratch.
+	if(git_oid headOid; git_reference_name_to_id(&headOid, repo, "HEAD") != 0)
+	{
+		LOG_ERROR(I18N::GIT_REPO_UPDATE_EXCEPT,
+		          "unborn HEAD (interrupted first clone) - recloning");
+		git_repository_free(repo);
+		repo = nullptr;
+		std::error_code ec;
+		// git object files are read-only on windows; remove_all chokes on
+		// them unless the attribute is cleared first.
+		for(auto it = std::filesystem::recursive_directory_iterator(path, ec);
+		    it != std::filesystem::recursive_directory_iterator(); it.increment(ec))
+		{
+			if(ec)
+				break;
+			std::filesystem::permissions(it->path(), std::filesystem::perms::owner_write,
+			                             std::filesystem::perm_options::add, ec);
+			ec.clear();
+		}
+		std::filesystem::remove_all(path, ec);
+		Clone();
+		return;
+	}
 	LOG_INFO(I18N::GIT_REPO_CHECKING_UPDATES);
 	try
 	{
